@@ -1,18 +1,12 @@
 package com.afollestad.impression.navdrawer;
 
 import android.Manifest;
-import android.accounts.AccountManager;
-import android.app.Activity;
-import android.app.Dialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -36,14 +30,8 @@ import com.afollestad.impression.providers.ExcludedFolderProvider;
 import com.afollestad.impression.utils.Utils;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
-import com.google.android.gms.auth.UserRecoverableAuthException;
-import com.google.android.gms.common.AccountPicker;
-import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.pluscubed.picasaclient.PicasaClient;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -52,33 +40,13 @@ import rx.SingleSubscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Callback {
 
-    public static final String SCOPE_PICASA = "https://picasaweb.google.com/data/";
-    private static final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR = 1024;
-    private static final int REQUEST_ADD_PICASA_ACCOUNT_PICKER = 1337;
     private RecyclerView mRecyclerView;
-
-    //private Account mCurrentAccount;
 
     private NavDrawerAdapter mAdapter;
     private String mPicasaAccountEmailAttempt;
-    //private LinearLayout mAccountsFrame;
-
-    //private List<Account> mAccounts;
-
-    /*private int mSelectedColor;
-    private int mRegularColor;*/
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        /*mSelectedColor = Utils.resolveColor(getActivity(), R.attr.colorAccent);
-        mRegularColor = Utils.resolveColor(getActivity(), android.R.attr.textColorPrimary);*/
-    }
 
     public void notifyClosed() {
         /*View v = getView();
@@ -146,6 +114,13 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
         return view;
     }*/
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        PicasaClient.get().attachActivity(getActivity());
+    }
+
     private void showAddAccountDialog() {
         if (getActivity() == null) {
             return;
@@ -158,10 +133,7 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
                     public void onSelection(MaterialDialog materialDialog, View view, int i, CharSequence s) {
                         if (i == 0) {
                             //Google Photos
-                            String[] accountTypes = new String[]{"com.google"};
-                            Intent intent = AccountPicker.newChooseAccountIntent(null, null,
-                                    accountTypes, false, null, null, null, null);
-                            startActivityForResult(intent, REQUEST_ADD_PICASA_ACCOUNT_PICKER);
+                            PicasaClient.get().pickAccount();
                         } else {
                             // TODO - Other web accounts
                             Toast.makeText(getActivity(), "Not implemented", Toast.LENGTH_SHORT).show();
@@ -173,71 +145,8 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_ADD_PICASA_ACCOUNT_PICKER) {
-            if (resultCode == Activity.RESULT_OK) {
-                mPicasaAccountEmailAttempt = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-                getPicasaAccountAuthToken(mPicasaAccountEmailAttempt);
-            } else if (resultCode == Activity.RESULT_CANCELED) {
-                //TODO: String res
-                Snackbar.make(mRecyclerView, "You must select an account to add", Snackbar.LENGTH_SHORT).show();
-            }
-        } else if (requestCode == REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR && resultCode == Activity.RESULT_OK) {
-            // Receiving a result that follows a GoogleAuthException, try auth again
-            getPicasaAccountAuthToken(mPicasaAccountEmailAttempt);
-        }
-    }
 
-    private void getPicasaAccountAuthToken(final String email) {
-        if (isDeviceOnline()) {
-            Single.create(new Single.OnSubscribe<String>() {
-                @Override
-                public void call(SingleSubscriber<? super String> subscriber) {
-                    try {
-                        subscriber.onSuccess(GoogleAuthUtil.getToken(getActivity(), email, "oauth2:" + SCOPE_PICASA));
-                    } catch (IOException | GoogleAuthException e) {
-                        subscriber.onError(e);
-                    }
-                }
-            }).subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new SingleSubscriber<String>() {
-                        @Override
-                        public void onSuccess(String value) {
-                            //TODO: Web request time!
-                            Toast.makeText(getActivity(), "OAuth2 token: " + value, Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onError(Throwable error) {
-                            if (error instanceof GooglePlayServicesAvailabilityException) {
-                                // The Google Play services APK is old, disabled, or not present.
-                                // Show a dialog created by Google Play services that allows
-                                // the user to update the APK
-                                int statusCode = ((GooglePlayServicesAvailabilityException) error)
-                                        .getConnectionStatusCode();
-                                Dialog dialog = GooglePlayServicesUtil.getErrorDialog(statusCode,
-                                        getActivity(), REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
-                                dialog.show();
-                            } else if (error instanceof UserRecoverableAuthException) {
-                                // Unable to authenticate, such as when the user has not yet granted
-                                // the app access to the account, but the user can fix this.
-                                // Forward the user to an activity in Google Play services.
-                                Intent intent = ((UserRecoverableAuthException) error).getIntent();
-                                startActivityForResult(intent, REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
-                            }
-                        }
-                    });
-        } else {
-            //TODO: String res
-            Snackbar.make(mRecyclerView, "Cannot add account when offline", Snackbar.LENGTH_SHORT).show();
-        }
-    }
-
-    private boolean isDeviceOnline() {
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnected();
+        PicasaClient.get().onActivityResult(requestCode, resultCode, data);
     }
 
     /*private void setupHeader(View view) {
@@ -315,6 +224,13 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
             return;
         }
         reload(savedInstanceState);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        PicasaClient.get().detachActivity();
     }
 
     @Override

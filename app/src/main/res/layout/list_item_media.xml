@@ -6,9 +6,7 @@
     android:background="?list_selector"
     android:minHeight="72dp"
     android:orientation="vertical"
-    android:paddingEnd="@dimen/grid_spacing_list"
     android:paddingLeft="@dimen/grid_spacing_list"
-    android:paddingRight="@dimen/grid_spacing_list"
     android:paddingStart="@dimen/grid_spacing_list"
     tools:layout_height="72dp">
 
@@ -42,7 +40,9 @@
         android:layout_marginLeft="56dp"
         android:layout_marginStart="56dp"
         android:gravity="center_vertical"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingEnd="@dimen/grid_spacing_list"
+        android:paddingRight="@dimen/grid_spacing_list">
 
         <TextView
             android:id="@+id/title"
