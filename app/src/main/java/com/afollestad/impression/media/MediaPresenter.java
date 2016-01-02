@@ -18,10 +18,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.afollestad.impression.App;
 import com.afollestad.impression.MvpPresenter;
 import com.afollestad.impression.R;
 import com.afollestad.impression.accounts.Account;
+import com.afollestad.impression.accounts.AccountDbUtil;
 import com.afollestad.impression.api.LocalMediaFolderEntry;
 import com.afollestad.impression.api.MediaEntry;
 import com.afollestad.impression.providers.SortMemoryProvider;
@@ -284,7 +284,7 @@ public class MediaPresenter extends MvpPresenter<MediaView> {
             return null;
         }
         //noinspection ConstantConditions
-        return App.getCurrentAccount(getView().getContextCompat())
+        return AccountDbUtil.getCurrentAccount(getView().getContextCompat())
                 .flatMap(new Func1<Account, Single<List<MediaEntry>>>() {
                     @Override
                     public Single<List<MediaEntry>> call(Account account) {

@@ -19,9 +19,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.afollestad.impression.App;
 import com.afollestad.impression.R;
 import com.afollestad.impression.accounts.Account;
+import com.afollestad.impression.accounts.AccountDbUtil;
 import com.afollestad.impression.api.MediaEntry;
 import com.afollestad.impression.providers.ExcludedFolderProvider;
 import com.afollestad.impression.utils.PrefUtils;
@@ -216,7 +216,7 @@ public class MediaCab implements Serializable, MaterialCab.Callback {
                 final List<MediaEntry> toSend = new ArrayList<>();
                 for (final MediaEntry e : mMediaEntries) {
                     if (e.isFolder()) {
-                        List<MediaEntry> entries = App.getCurrentAccount(mContext).flatMap(new Func1<Account, Single<List<MediaEntry>>>() {
+                        List<MediaEntry> entries = AccountDbUtil.getCurrentAccount(mContext).flatMap(new Func1<Account, Single<List<MediaEntry>>>() {
                             @Override
                             public Single<List<MediaEntry>> call(Account account) {
                                 //noinspection ResourceType

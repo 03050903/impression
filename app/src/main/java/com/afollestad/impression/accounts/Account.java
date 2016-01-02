@@ -1,6 +1,7 @@
 package com.afollestad.impression.accounts;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.IntDef;
 
 import com.afollestad.impression.api.MediaEntry;
@@ -54,7 +55,7 @@ public class Account {
                 mHelper = new LocalHelper(this);
                 break;
             case TYPE_PICASA:
-                mHelper = null;
+                mHelper = new PicasaHelper(this);
                 break;
             case TYPE_GOOGLE_DRIVE:
             case TYPE_DROPBOX:
@@ -83,6 +84,28 @@ public class Account {
 
     public Single<List<MediaEntry>> getEntries(Context context, String albumPath, boolean explorerMode, @MediaAdapter.SortMode int sort, @MediaAdapter.FileFilterMode int filter) {
         return mHelper.getEntries(context, albumPath, explorerMode, sort, filter);
+    }
+
+    public Drawable getHeader(Context context) {
+        return mHelper.getHeader(context);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Account
+                && mId == ((Account) o).mId
+                && mType == ((Account) o).mType
+                && mUsername.equals(((Account) o).mUsername);
+    }
+
+    @Override
+    public int hashCode() {
+        int i = 37;
+        i = i * 37 + (int) (mId ^ (mId >>> 32));
+        i = i * 37 + mUsername.hashCode();
+        i = i * 37 + mType;
+
+        return i;
     }
 
     @IntDef({TYPE_LOCAL, TYPE_PICASA, TYPE_GOOGLE_DRIVE, TYPE_DROPBOX})

@@ -18,21 +18,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.afollestad.impression.App;
 import com.afollestad.impression.R;
 import com.afollestad.impression.accounts.Account;
+import com.afollestad.impression.accounts.AccountDbUtil;
+import com.afollestad.impression.accounts.PicasaHelper;
 import com.afollestad.impression.api.LocalMediaFolderEntry;
 import com.afollestad.impression.api.MediaFolderEntry;
 import com.afollestad.impression.base.ThemedActivity;
 import com.afollestad.impression.media.MainActivity;
 import com.afollestad.impression.media.MediaAdapter;
 import com.afollestad.impression.providers.ExcludedFolderProvider;
+import com.afollestad.impression.utils.PrefUtils;
 import com.afollestad.impression.utils.Utils;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.pluscubed.picasaclient.PicasaClient;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import rx.Single;
@@ -46,17 +48,9 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
     private RecyclerView mRecyclerView;
 
     private NavDrawerAdapter mAdapter;
-    private String mPicasaAccountEmailAttempt;
 
     public void notifyClosed() {
-        /*View v = getView();
-        if (v == null) {
-            return;
-        }
-        View dropdownButton = v.findViewById(R.id.dropdownButton);
-        if (dropdownButton.getTag() != null) {
-            dropdownButton.performClick();
-        }*/
+        mAdapter.setShowingAccounts(false);
     }
 
     public void reloadAlbums() {
@@ -67,58 +61,11 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
         }
     }
 
-    /*private void invalidateAccountViews(View itemView, int currentIndex, int selectedIndex) {
-        if (itemView == null) {
-            for (int i = 0; i < mAccountsFrame.getChildCount() - 1; i++) {
-                invalidateAccountViews(mAccountsFrame.getChildAt(i), i, selectedIndex);
-            }
-        } else {
-            TextView title = (TextView) itemView.findViewById(R.id.title);
-            ImageView icon = (ImageView) itemView.findViewById(R.id.icon);
-
-            Account acc = mAccounts.get(currentIndex);
-            switch (acc.type()) {
-                default:
-                    icon.setImageResource(R.drawable.ic_folder);
-                    break;
-                case Account.TYPE_GOOGLE_DRIVE:
-                    icon.setImageResource(R.drawable.ic_drive);
-                    break;
-                case Account.TYPE_DROPBOX:
-                    icon.setImageResource(R.drawable.ic_dropbox);
-                    break;
-            }
-
-            boolean activated = currentIndex == selectedIndex;
-            itemView.setActivated(activated);
-            icon.getDrawable().mutate().setColorFilter(activated ? mSelectedColor : mRegularColor, PorterDuff.Mode.SRC_ATOP);
-            itemView.setTag(currentIndex);
-            title.setText(acc.name());
-            title.setTextColor(activated ? mSelectedColor : mRegularColor);
-        }
-    }*/
-
-    /*private View getAccountView(int index, int selectedIndex, ViewGroup container) {
-        RelativeLayout view = (RelativeLayout) getActivity().getLayoutInflater().inflate(R.layout.list_item_drawer_account, container, false);
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Integer index = (Integer) v.getTag();
-                Account a = mAccounts.get(index);
-                if (a.type() == Account.TYPE_GOOGLE_DRIVE) {
-                    // TODO
-                }
-            }
-        });
-        invalidateAccountViews(view, index, selectedIndex);
-        return view;
-    }*/
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        PicasaClient.get().attachActivity(getActivity());
+        PicasaClient.get().attachFragment(getActivity(), this);
     }
 
     private void showAddAccountDialog() {
@@ -146,49 +93,21 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        PicasaClient.get().onActivityResult(requestCode, resultCode, data);
+        PicasaClient.get().onActivityResult(requestCode, resultCode, data)
+                .subscribe(new Action1<Object>() {
+                    @Override
+                    public void call(Object o) {
+                        android.accounts.Account picasaAccount = PicasaClient.get().getAccount();
+                        Account account = PicasaHelper.newInstance(getActivity(), picasaAccount.name);
+
+                        AccountDbUtil.addAccount(account);
+                        PrefUtils.setCurrentAccountId(getActivity(), account.getId());
+
+                        mAdapter.addAccount(account);
+                        mAdapter.notifyDataSetChanged();
+                    }
+                });
     }
-
-    /*private void setupHeader(View view) {
-        View addAccountFrame = ((ViewStub) view.findViewById(R.id.addAccountStub)).inflate();
-        ((ImageView) addAccountFrame.findViewById(R.id.icon)).getDrawable().mutate().setColorFilter(mRegularColor, PorterDuff.Mode.SRC_ATOP);
-
-        mAccountsFrame = (LinearLayout) view.findViewById(R.id.accountsFrame);
-        mAccountsFrame.findViewById(R.id.addAccountFrame).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAddAccountDialog();
-            }
-        });
-        ImageButton dropdownButton = (ImageButton) view.findViewById(R.id.dropdownButton);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            dropdownButton.setBackgroundResource(Utils.resolveDrawable(getActivity(), R.attr.menu_selector));
-        }
-        dropdownButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (v.getTag() == null) {
-                    ((ImageButton) v).setImageResource(R.drawable.ic_uparrow);
-                    v.setTag("GOUP");
-                    View root = getView();
-                    if (root != null) {
-                        ((TextView) root.findViewById(R.id.accountHeader)).setText(R.string.accounts);
-                        root.findViewById(R.id.accountsFrame).setVisibility(View.VISIBLE);
-                        root.findViewById(R.id.list).setVisibility(View.GONE);
-                    }
-                } else {
-                    ((ImageButton) v).setImageResource(R.drawable.ic_downarrow);
-                    v.setTag(null);
-                    View root = getView();
-                    if (root != null) {
-                        ((TextView) root.findViewById(R.id.accountHeader)).setText(R.string.local);
-                        root.findViewById(R.id.accountsFrame).setVisibility(View.GONE);
-                        root.findViewById(R.id.list).setVisibility(View.VISIBLE);
-                    }
-                }
-            }
-        });
-    }*/
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -230,7 +149,7 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
     public void onDetach() {
         super.onDetach();
 
-        PicasaClient.get().detachActivity();
+        PicasaClient.get().detach();
     }
 
     @Override
@@ -249,7 +168,7 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
             mAdapter.restoreInstanceState(instanceState);
         }
 
-        App.getCurrentAccount(getActivity())
+        AccountDbUtil.getCurrentAccount(getActivity())
                 .doOnSuccess(new Action1<Account>() {
                     @Override
                     public void call(Account account) {
@@ -257,17 +176,17 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
                         loadMediaFolders(account);
                     }
                 })
-                .flatMap(new Func1<Account, Single<Account[]>>() {
+                .flatMap(new Func1<Account, Single<List<Account>>>() {
                     @Override
-                    public Single<Account[]> call(Account account) {
-                        return App.getAllAccounts();
+                    public Single<List<Account>> call(Account account) {
+                        return AccountDbUtil.getAllAccounts();
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Account[]>() {
+                .subscribe(new Action1<List<Account>>() {
                     @Override
-                    public void call(Account[] accounts) {
-                        mAdapter.setAccounts(Arrays.asList(accounts));
+                    public void call(List<Account> accounts) {
+                        mAdapter.setAccounts(accounts);
                     }
                 });
 

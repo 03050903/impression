@@ -95,20 +95,6 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
         mEntries.add(entry);
     }
 
-    /*public void update(Entry entry) {
-        boolean found = false;
-        for (int i = 0; i < mEntries.size(); i++) {
-            if (mEntries.get(i).getPath().equals(entry.getPath())) {
-                mEntries.get(i).copy(entry);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            mEntries.add(entry);
-        }
-    }*/
-
     public Entry getEntryAtPosition(int index) {
         return mEntries.get(index);
     }
@@ -143,6 +129,10 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
     public void setShowingAccounts(boolean show) {
         mShowingAccounts = show;
         notifyDataSetChanged();
+    }
+
+    public void addAccount(Account account) {
+        mAccounts.add(account);
     }
 
     public void setAccounts(List<Account> accounts) {

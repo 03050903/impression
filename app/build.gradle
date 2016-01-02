@@ -102,11 +102,15 @@ dependencies {
     compile 'com.android.support:support-v13:23.1.1'
     compile 'com.android.support:palette-v7:23.1.1'
     compile 'com.android.support:design:23.1.1'
+
+    compile 'com.github.afollestad:inquiry:2.0.1'
+
+    compile 'com.google.android.gms:play-services-plus:8.4.0'
 /*
     compile 'com.trello:rxlifecycle:0.3.1'
     compile 'com.trello:rxlifecycle-components:0.3.1'*/
 
-    compile 'com.github.pluscubed:android-picasa-client:aca14780b6'
+    compile 'com.github.pluscubed:android-picasa-client:d86245d0db'
 
     compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true;

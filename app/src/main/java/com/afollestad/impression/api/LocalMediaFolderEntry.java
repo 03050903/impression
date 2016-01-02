@@ -6,9 +6,9 @@ import android.content.Context;
 import android.os.Environment;
 import android.provider.MediaStore;
 
-import com.afollestad.impression.App;
 import com.afollestad.impression.R;
 import com.afollestad.impression.accounts.Account;
+import com.afollestad.impression.accounts.AccountDbUtil;
 import com.afollestad.impression.media.MediaAdapter;
 import com.afollestad.impression.utils.PrefUtils;
 
@@ -102,7 +102,7 @@ public class LocalMediaFolderEntry extends LocalMediaEntry implements MediaFolde
 
     @Override
     public void delete(final Activity context) {
-        List<MediaEntry> mediaEntries = App.getCurrentAccount(context).flatMap(new Func1<Account, Single<List<MediaEntry>>>() {
+        List<MediaEntry> mediaEntries = AccountDbUtil.getCurrentAccount(context).flatMap(new Func1<Account, Single<List<MediaEntry>>>() {
             @Override
             public Single<List<MediaEntry>> call(Account account) {
                 //noinspection ResourceType
