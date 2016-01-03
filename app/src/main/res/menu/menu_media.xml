@@ -95,5 +95,4 @@
         android:id="@+id/viewExplorer"
         android:checkable="true"
         android:title="@string/explorer_mode" />
-
 </menu>

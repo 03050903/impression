@@ -41,6 +41,7 @@
         <a href=\'https://www.linkedin.com/in/dciao\'>LinkedIn</a><br/><br/>
 
         <b>Marlon Jones</b><br/>
+        <a href=\'https://virusthepanda.github.io\'>Website</a>&nbsp;&nbsp;
         <a href=\'https://twitter.com/VirusThePanda\'>Twitter</a>&nbsp;&nbsp;
         <a href=\'https://www.google.com/+MarlonJones\'>Google+</a>&nbsp;&nbsp;
         <a href=\'https://github.com/VirusThePanda\'>GitHub</a>&nbsp;&nbsp;
@@ -82,14 +83,13 @@
     <string name="filtering_photos">Filter: Photos</string>
     <string name="filtering_videos">Filter: Videos</string>
     <string name="explorer_mode">Explorer Mode</string>
-
     <string name="local">Local</string>
     <string name="google_photos">Google Photos (Picasa)</string>
     <string name="google_drive">Google Drive</string>
     <string name="dropbox">Dropbox</string>
     <string name="add_account">Add an account…</string>
     <string name="accounts">Accounts</string>
-
+    <string name="cast">Cast To…</string>
     <string name="view_mode">View Mode</string>
     <string name="folder">Folder</string>
     <string name="error">Error</string>
@@ -214,4 +214,6 @@
     <string name="video">VIDEO</string>
     <string name="device_folders">Device Folders</string>
 
+    <!--Edit this when pushed to Play Store-->
+    <string name="cast_sdk_id">A13609BC</string>
 </resources>

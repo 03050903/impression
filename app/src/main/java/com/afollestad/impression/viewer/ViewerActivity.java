@@ -25,8 +25,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.print.PrintHelper;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
+import android.support.v7.app.MediaRouteActionProvider;
+import android.support.v7.media.MediaRouteSelector;
+import android.support.v7.media.MediaRouter;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.transition.ArcMotion;
@@ -59,6 +63,8 @@ import com.afollestad.impression.utils.TimeUtils;
 import com.afollestad.impression.utils.Utils;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.cast.CastDevice;
+import com.google.android.gms.cast.CastMediaControlIntent;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -109,6 +115,11 @@ public class ViewerActivity extends ThemedActivity implements SlideshowInitDialo
     private View mBottomScrim;
 
     private AnimatorSet mUiAnimatorSet;
+
+    private MediaRouter mMediaRouter;
+    private MediaRouteSelector mMediaRouteSelector;
+
+    private CastDevice mCastDevice;
 
     private ViewPager.OnPageChangeListener mPagerListener = new ViewPager.OnPageChangeListener() {
 
@@ -427,6 +438,11 @@ public class ViewerActivity extends ThemedActivity implements SlideshowInitDialo
         params.setMargins(0, getStatusBarHeight(), 0, 0);
         mToolbar.setLayoutParams(params);
 
+        //Cast Media Router (Not complete)
+        mMediaRouter = MediaRouter.getInstance(getApplicationContext());
+        mMediaRouteSelector = new MediaRouteSelector.Builder()
+                .addControlCategory( CastMediaControlIntent.categoryForCast(getString(R.string.cast_sdk_id)))
+                .build();
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -772,16 +788,25 @@ public class ViewerActivity extends ThemedActivity implements SlideshowInitDialo
         if (mAdapter.getEntries().size() > 0) {
             MediaEntry currentEntry = mAdapter.getEntries().get(mCurrentPosition);
             if (currentEntry == null || currentEntry.isVideo()) {
+                MenuItem mediaRouteMenuItem = menu.findItem(R.id.media_route_menu_item);
+                MediaRouteActionProvider mediaRouteActionProvider =
+                        (MediaRouteActionProvider) MenuItemCompat.getActionProvider(mediaRouteMenuItem);
+                mediaRouteActionProvider.setRouteSelector(mMediaRouteSelector);
                 menu.findItem(R.id.print).setVisible(false);
                 menu.findItem(R.id.edit).setVisible(false);
                 menu.findItem(R.id.set_as).setVisible(false);
             } else {
+                MenuItem mediaRouteMenuItem = menu.findItem(R.id.media_route_menu_item);
+                MediaRouteActionProvider mediaRouteActionProvider =
+                        (MediaRouteActionProvider) MenuItemCompat.getActionProvider(mediaRouteMenuItem);
+                mediaRouteActionProvider.setRouteSelector(mMediaRouteSelector);
                 menu.findItem(R.id.print).setVisible(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT);
                 menu.findItem(R.id.edit).setVisible(true);
                 menu.findItem(R.id.set_as).setVisible(true);
             }
         }
         menu.findItem(R.id.slideshow).setVisible(!mAllVideos && mSlideshowTimer == null);
+
 
         return super.onCreateOptionsMenu(menu);
     }

@@ -464,4 +464,5 @@ public class MediaFragment extends Fragment implements MediaView {
     protected MediaPresenter createPresenter() {
         return new MediaPresenter();
     }
+
 }
