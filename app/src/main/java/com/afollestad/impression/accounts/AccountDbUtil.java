@@ -39,7 +39,7 @@ public class AccountDbUtil {
                 .map(new Func1<List<Account>, Account>() {
                     @Override
                     public Account call(List<Account> accounts) {
-                        Account current = null;
+                        Account current = accounts.get(0);
                         for (Account a : accounts) {
                             if (a.getId() == currentId) {
                                 current = a;
