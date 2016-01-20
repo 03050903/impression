@@ -19,7 +19,7 @@ public class BorderCircleView extends FrameLayout {
     private final Bitmap mCheck;
     private final Paint paint;
     private final Paint paintBorder;
-    private final int borderWidth;
+    private final int mBorderWidth;
 
     private Paint paintCheck;
     private PorterDuffColorFilter blackFilter;
@@ -36,7 +36,7 @@ public class BorderCircleView extends FrameLayout {
     public BorderCircleView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mCheck = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_check);
-        borderWidth = (int) getResources().getDimension(R.dimen.circle_view_border);
+        mBorderWidth = (int) getResources().getDimension(R.dimen.circle_view_border);
 
         paint = new Paint();
         paint.setAntiAlias(true);
@@ -87,9 +87,9 @@ public class BorderCircleView extends FrameLayout {
             canvasSize = canvas.getHeight();
         }
 
-        int circleCenter = (canvasSize - (borderWidth * 2)) / 2;
-        canvas.drawCircle(circleCenter + borderWidth, circleCenter + borderWidth, ((canvasSize - (borderWidth * 2)) / 2) + borderWidth - 4.0f, paintBorder);
-        canvas.drawCircle(circleCenter + borderWidth, circleCenter + borderWidth, ((canvasSize - (borderWidth * 2)) / 2) - 4.0f, paint);
+        int circleCenter = (canvasSize - (mBorderWidth * 2)) / 2;
+        canvas.drawCircle(circleCenter + mBorderWidth, circleCenter + mBorderWidth, ((canvasSize - (mBorderWidth * 2)) / 2) + mBorderWidth - 4.0f, paintBorder);
+        canvas.drawCircle(circleCenter + mBorderWidth, circleCenter + mBorderWidth, ((canvasSize - (mBorderWidth * 2)) / 2) - 4.0f, paint);
 
         if (isActivated()) {
             final int offset = (canvasSize / 2) - (mCheck.getWidth() / 2);

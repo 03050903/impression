@@ -86,6 +86,10 @@ public class Account {
         return mHelper.getEntries(context, albumPath, explorerMode, sort, filter);
     }
 
+    public Drawable getProfileImage(Context context) {
+        return mHelper.getProfileImage(context);
+    }
+
     public Drawable getHeader(Context context) {
         return mHelper.getHeader(context);
     }

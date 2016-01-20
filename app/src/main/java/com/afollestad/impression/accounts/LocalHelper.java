@@ -53,6 +53,11 @@ public class LocalHelper extends AccountHelper {
     }
 
     @Override
+    public Drawable getProfileImage(Context context) {
+        return null;
+    }
+
+    @Override
     public Single<Set<LocalMediaFolderEntry>> getMediaFolders(final Context context, @MediaAdapter.SortMode final int sortMode, @MediaAdapter.FileFilterMode int filter) {
         final List<Uri> uris = new ArrayList<>();
         if (filter == MediaAdapter.FILTER_PHOTOS || filter == MediaAdapter.FILTER_ALL) {

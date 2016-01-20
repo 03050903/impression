@@ -26,4 +26,6 @@ public abstract class AccountHelper {
     public abstract Drawable getHeader(Context context);
 
     public abstract boolean supportsExplorerMode();
+
+    public abstract Drawable getProfileImage(Context context);
 }

@@ -17,4 +17,10 @@
     <attr name="menu_selector" format="reference" />
     <attr name="video_overlay_selector" format="reference" />
 
+    <declare-styleable name="BezelImageView">
+        <attr name="maskDrawable" format="reference" />
+        <attr name="borderDrawable" format="reference" />
+        <attr name="desaturateOnPress" format="boolean" />
+    </declare-styleable>
+
 </resources>

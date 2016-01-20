@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.afollestad.impression.R;
 import com.afollestad.impression.accounts.Account;
+import com.afollestad.impression.accounts.AccountDbUtil;
 import com.afollestad.impression.api.LocalMediaFolderEntry;
 import com.afollestad.impression.base.ThemedActivity;
 import com.afollestad.impression.utils.Utils;
@@ -22,6 +23,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import rx.SingleSubscriber;
+import rx.android.schedulers.AndroidSchedulers;
 
 public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.ViewHolder> {
 
@@ -54,6 +58,9 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
     private long mCurrentAccountId;
     private boolean mShowingAccounts;
 
+    private int mInsetsTop = -1;
+    private int mInitialInsetsTop = -1;
+
 
     public NavDrawerAdapter(Context context, Callback callback) {
         mContext = context;
@@ -64,6 +71,11 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
         mShowingAccounts = false;
 
         setHasStableIds(true);
+    }
+
+    public void setInsetsTop(int top) {
+        mInsetsTop = top;
+        notifyItemChanged(0);
     }
 
     public void saveInstanceState(Bundle out) {
@@ -88,6 +100,7 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
                 notifyItemChanged(i + 1, PAYLOAD_UPDATE_ACTIVATED);
             }
         }
+        notifyItemRangeChanged(mEntries.size(), 3);
         mCheckedId = id;
     }
 
@@ -198,43 +211,71 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        if (holder.isViewTypeHeader) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
+        switch (getItemViewType(position)) {
+            case VIEW_TYPE_HEADER:
+                for (ImageView profileImage : holder.profileImages) {
+                    ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) profileImage.getLayoutParams();
+                    if (mInitialInsetsTop == -1) {
+                        mInitialInsetsTop = params.topMargin;
+                    }
 
+                    if (mInsetsTop != -1) {
+                        params.topMargin = mInsetsTop + mInitialInsetsTop;
+                    }
+                    profileImage.setLayoutParams(params);
+                }
+                AccountDbUtil.getCurrentAccount(mContext).observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new SingleSubscriber<Account>() {
+                            @Override
+                            public void onSuccess(Account value) {
+                                holder.headerImage.setImageDrawable(value.getHeader(mContext));
+                                holder.profileImages[0].setImageResource(R.drawable.temp_header);
 
-        } else if (holder.isViewTypeAccount) {
-            position = position - 1;
+                            }
 
-            if (position < mAccounts.size()) {
-                Account account = mAccounts.get(position);
-                holder.textView.setText(account.name());
-                holder.icon.setVisibility(View.GONE);
-                holder.divider.setVisibility(View.GONE);
-            } else {
-                holder.textView.setText(R.string.add_account);
-                holder.icon.setImageResource(R.drawable.ic_add_white);
-                holder.icon.setVisibility(View.VISIBLE);
-                holder.divider.setVisibility(View.VISIBLE);
-            }
-        } else {
-            position = position - 1;
+                            @Override
+                            public void onError(Throwable error) {
 
-            if (position < mEntries.size()) {
-                Entry entry = mEntries.get(position);
+                            }
+                        });
+                break;
+            case VIEW_TYPE_ACCOUNTS:
+                position = position - 1;
 
-                holder.icon.setVisibility(View.GONE);
+                if (position < mAccounts.size()) {
+                    Account account = mAccounts.get(position);
+                    holder.textView.setText(account.name());
+                    holder.icon.setVisibility(View.GONE);
+                    holder.divider.setVisibility(View.GONE);
+                } else {
+                    holder.textView.setText(R.string.add_account);
+                    holder.icon.setImageResource(R.drawable.ic_add_white);
+                    holder.icon.setVisibility(View.VISIBLE);
+                    holder.divider.setVisibility(View.VISIBLE);
+                }
+                break;
+            case VIEW_TYPE_MEDIA_FOLDERS:
+            default:
+                position = position - 1;
 
-                holder.divider.setVisibility(View.GONE);
-                holder.textView.setText(entry.getName(mContext));
+                if (position < mEntries.size()) {
+                    Entry entry = mEntries.get(position);
 
-                updateFolderEntryActivation(holder, position);
-            } else {
-                int footerPosition = position - mEntries.size();
-                holder.textView.setText(FOOTER_ITEM_STRINGS[(footerPosition)]);
-                holder.icon.setImageResource(FOOTER_ITEM_ICONS[(footerPosition)]);
-                holder.icon.setVisibility(View.VISIBLE);
-                holder.divider.setVisibility(footerPosition == 0 ? View.VISIBLE : View.GONE);
-            }
+                    holder.icon.setVisibility(View.GONE);
+
+                    holder.divider.setVisibility(View.GONE);
+                    holder.textView.setText(entry.getName(mContext));
+
+                    updateFolderEntryActivation(holder, position);
+                } else {
+                    int footerPosition = position - mEntries.size();
+                    holder.textView.setText(FOOTER_ITEM_STRINGS[(footerPosition)]);
+                    holder.icon.setImageResource(FOOTER_ITEM_ICONS[(footerPosition)]);
+                    holder.icon.setVisibility(View.VISIBLE);
+                    holder.divider.setVisibility(footerPosition == 0 ? View.VISIBLE : View.GONE);
+                }
+                break;
         }
     }
 
@@ -335,13 +376,11 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
 
     protected class ViewHolder extends RecyclerView.ViewHolder {
 
-        final boolean isViewTypeHeader;
-        final boolean isViewTypeAccount;
-
         final View viewFrame;
 
         final ImageView headerImage;
         final TextView headerSubtitle;
+        final ImageView[] profileImages;
         final ImageButton dropdownButton;
 
         final View divider;
@@ -357,17 +396,18 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
                 divider = null;
                 icon = null;
                 headerSubtitle = (TextView) v.findViewById(R.id.subtitle);
-                isViewTypeHeader = true;
-                isViewTypeAccount = false;
                 dropdownButton = (ImageButton) v.findViewById(R.id.dropdown);
+                profileImages = new ImageView[3];
+                profileImages[0] = (ImageView) v.findViewById(R.id.profile_1);
+                profileImages[1] = (ImageView) v.findViewById(R.id.profile_2);
+                profileImages[2] = (ImageView) v.findViewById(R.id.profile_3);
             } else {
                 headerImage = null;
                 divider = ((ViewGroup) v).getChildAt(0);
                 icon = (ImageView) v.findViewById(R.id.icon);
                 headerSubtitle = null;
-                isViewTypeHeader = false;
-                isViewTypeAccount = viewType == VIEW_TYPE_ACCOUNTS;
                 dropdownButton = null;
+                profileImages = null;
             }
             textView = (TextView) v.findViewById(R.id.title);
 

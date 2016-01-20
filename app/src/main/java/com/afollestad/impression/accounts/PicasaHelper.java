@@ -114,4 +114,9 @@ public class PicasaHelper extends AccountHelper {
     public boolean supportsExplorerMode() {
         return false;
     }
+
+    @Override
+    public Drawable getProfileImage(Context context) {
+        return null;
+    }
 }
