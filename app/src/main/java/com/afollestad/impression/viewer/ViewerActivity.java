@@ -438,7 +438,7 @@ public class ViewerActivity extends ThemedActivity implements SlideshowInitDialo
         params.setMargins(0, getStatusBarHeight(), 0, 0);
         mToolbar.setLayoutParams(params);
 
-        //Cast Media Router (Not complete)
+        //Media Router for Cast - Not complete yet
         mMediaRouter = MediaRouter.getInstance(getApplicationContext());
         mMediaRouteSelector = new MediaRouteSelector.Builder()
                 .addControlCategory( CastMediaControlIntent.categoryForCast(getString(R.string.cast_sdk_id)))
