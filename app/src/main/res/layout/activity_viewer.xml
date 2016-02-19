@@ -22,15 +22,24 @@
         android:layout_gravity="bottom"
         android:background="@android:color/transparent" />
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
+
+    <com.pluscubed.insetsdispatcher.view.InsetsDispatcherFrameLayout
         android:layout_width="match_parent"
-        android:layout_height="?actionBarSize"
-        android:elevation="@dimen/toolbar_elevation"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        android:transitionName="Toolbar"
-        app:contentInsetStart="@dimen/toolbar_inset"
-        app:popupTheme="?popup_theme"
-        tools:ignore="UnusedAttribute" />
+        android:layout_height="wrap_content"
+        app:windowInsets="top|left|right"
+        app:windowInsetsUseMargin="true">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            android:elevation="@dimen/toolbar_elevation"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            android:transitionName="Toolbar"
+            app:contentInsetStart="@dimen/toolbar_inset"
+            app:popupTheme="?popup_theme"
+            tools:ignore="UnusedAttribute" />
+
+    </com.pluscubed.insetsdispatcher.view.InsetsDispatcherFrameLayout>
 
 </merge>

@@ -19,7 +19,6 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.afollestad.impression.BuildConfig;
@@ -237,9 +236,6 @@ public class ViewerPagerFragment extends Fragment {
             mVideoView.setVideoURI(getUri());
             View playFrame = view.findViewById(R.id.playFrame);
             View seekFrame = view.findViewById(R.id.seekerFrame);
-            FrameLayout.LayoutParams p = (FrameLayout.LayoutParams) seekFrame.getLayoutParams();
-            p.rightMargin = ((ViewerActivity) getActivity()).getNavigationBarHeight(false, true);
-            p.bottomMargin = ((ViewerActivity) getActivity()).getNavigationBarHeight(true, false);
             mVideoView.hookViews(this, playFrame);
             loadVideo();
             ((ViewerActivity) getActivity()).invalidateTransition();

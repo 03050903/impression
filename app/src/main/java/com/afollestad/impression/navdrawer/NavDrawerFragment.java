@@ -145,10 +145,6 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
         reload(savedInstanceState);
     }
 
-    public void setTopInsets(int insetsTop) {
-        mAdapter.setInsetsTop(insetsTop);
-    }
-
     @Override
     public void onDetach() {
         super.onDetach();

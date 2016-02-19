@@ -9,8 +9,6 @@ import android.app.SharedElementCallback;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -45,9 +43,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.afollestad.impression.BuildConfig;
@@ -390,34 +386,9 @@ public class ViewerActivity extends ThemedActivity implements SlideshowInitDialo
         outState.putInt(STATE_CURRENT_POSITION, mCurrentPosition);
     }
 
-    private int getStatusBarHeight() {
-        return mStatusBarHeight = Utils.getStatusBarHeight(this);
-    }
-
     @Override
     protected boolean hasColoredBars() {
         return false;
-    }
-
-    public int getNavigationBarHeight(boolean portraitOnly, boolean landscapeOnly) {
-        final Configuration config = getResources().getConfiguration();
-        final Resources r = getResources();
-        int id;
-        if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            if (portraitOnly) {
-                return 0;
-            }
-            id = r.getIdentifier("navigation_bar_height_landscape", "dimen", "android");
-        } else {
-            if (landscapeOnly) {
-                return 0;
-            }
-            id = r.getIdentifier("navigation_bar_height", "dimen", "android");
-        }
-        if (id > 0) {
-            return r.getDimensionPixelSize(id);
-        }
-        return 0;
     }
 
 
@@ -434,9 +405,6 @@ public class ViewerActivity extends ThemedActivity implements SlideshowInitDialo
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, getStatusBarHeight(), 0, 0);
-        mToolbar.setLayoutParams(params);
 
         //Media Router for Cast - Not complete yet
         mMediaRouter = MediaRouter.getInstance(getApplicationContext());
@@ -529,14 +497,6 @@ public class ViewerActivity extends ThemedActivity implements SlideshowInitDialo
                 }
             }
         });
-
-        // Prevents nav bar from overlapping toolbar options in landscape
-        mToolbar.setPadding(
-                mToolbar.getPaddingLeft(),
-                mToolbar.getPaddingTop(),
-                getNavigationBarHeight(false, true),
-                mToolbar.getPaddingBottom()
-        );
     }
 
     @Nullable

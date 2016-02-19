@@ -36,7 +36,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.Window;
-import android.view.WindowInsets;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -346,31 +345,6 @@ public class MainActivity extends ThemedActivity
             FrameLayout navDrawerFrame = (FrameLayout) findViewById(R.id.nav_drawer_frame);
             navDrawerFrame.setLayoutParams(new DrawerLayout.LayoutParams(Utils.getNavDrawerWidth(this),
                     DrawerLayout.LayoutParams.MATCH_PARENT, Gravity.START));
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mDrawerLayout.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-
-                    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-                    @Override
-                    public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
-
-                        //TODO: Check if NavigationView needs bottom padding
-
-                        /*WindowInsets drawerLayoutInsets = insets.replaceSystemWindowInsets(
-                                insets.getSystemWindowInsetLeft(),
-                                insets.getSystemWindowInsetTop(),
-                                insets.getSystemWindowInsetRight(),
-                                0
-                        );*/
-
-                        findNavDrawerFragment().setTopInsets(insets.getSystemWindowInsetTop());
-
-                        ((DrawerLayout) v).setChildInsets(insets,
-                                insets.getSystemWindowInsetTop() > 0);
-                        return insets;
-                    }
-                });
-            }
 
             if (getIntent().getAction() != null &&
                     (getIntent().getAction().equals(Intent.ACTION_GET_CONTENT) ||

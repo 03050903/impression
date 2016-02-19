@@ -54,7 +54,7 @@ public class LocalHelper extends AccountHelper {
 
     @Override
     public Drawable getProfileImage(Context context) {
-        return null;
+        return ContextCompat.getDrawable(context, R.drawable.temp_header);
     }
 
     @Override

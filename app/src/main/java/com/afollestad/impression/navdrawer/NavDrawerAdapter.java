@@ -16,6 +16,7 @@ import com.afollestad.impression.accounts.Account;
 import com.afollestad.impression.accounts.AccountDbUtil;
 import com.afollestad.impression.api.LocalMediaFolderEntry;
 import com.afollestad.impression.base.ThemedActivity;
+import com.afollestad.impression.utils.PrefUtils;
 import com.afollestad.impression.utils.Utils;
 
 import java.io.File;
@@ -39,7 +40,6 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
     public static final int[] FOOTER_ITEM_STRINGS = {R.string.settings, R.string.about};
     public static final int[] FOOTER_ITEM_ICONS = {R.drawable.ic_settings_white, R.drawable.ic_info_white};
 
-
     private static final String STATE_SELECTED_ID = "selected_navigation_drawer_id";
 
     private static final int VIEW_TYPE_MEDIA_FOLDERS = 42;
@@ -58,9 +58,6 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
     private long mCurrentAccountId;
     private boolean mShowingAccounts;
 
-    private int mInsetsTop = -1;
-    private int mInitialInsetsTop = -1;
-
 
     public NavDrawerAdapter(Context context, Callback callback) {
         mContext = context;
@@ -71,11 +68,6 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
         mShowingAccounts = false;
 
         setHasStableIds(true);
-    }
-
-    public void setInsetsTop(int top) {
-        mInsetsTop = top;
-        notifyItemChanged(0);
     }
 
     public void saveInstanceState(Bundle out) {
@@ -214,24 +206,25 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
     public void onBindViewHolder(final ViewHolder holder, int position) {
         switch (getItemViewType(position)) {
             case VIEW_TYPE_HEADER:
-                for (ImageView profileImage : holder.profileImages) {
-                    ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) profileImage.getLayoutParams();
-                    if (mInitialInsetsTop == -1) {
-                        mInitialInsetsTop = params.topMargin;
-                    }
-
-                    if (mInsetsTop != -1) {
-                        params.topMargin = mInsetsTop + mInitialInsetsTop;
-                    }
-                    profileImage.setLayoutParams(params);
-                }
-                AccountDbUtil.getCurrentAccount(mContext).observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new SingleSubscriber<Account>() {
+                AccountDbUtil.getAllAccounts().observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new SingleSubscriber<List<Account>>() {
                             @Override
-                            public void onSuccess(Account value) {
-                                holder.headerImage.setImageDrawable(value.getHeader(mContext));
-                                holder.profileImages[0].setImageResource(R.drawable.temp_header);
-
+                            public void onSuccess(List<Account> value) {
+                                long currentAccountId = PrefUtils.getCurrentAccountId(mContext);
+                                boolean firstSet = false;
+                                for (Account account : value) {
+                                    int profileImageIndex;
+                                    if (account.getId() == currentAccountId) {
+                                        holder.headerImage.setImageDrawable(account.getHeader(mContext));
+                                        profileImageIndex = 0;
+                                    } else if (!firstSet) {
+                                        profileImageIndex = 1;
+                                        firstSet = true;
+                                    } else {
+                                        profileImageIndex = 2;
+                                    }
+                                    holder.profileImages[profileImageIndex].setImageDrawable(account.getProfileImage(mContext));
+                                }
                             }
 
                             @Override
