@@ -1,7 +1,7 @@
 package com.afollestad.impression.accounts;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
+import android.net.Uri;
 
 import com.afollestad.impression.api.MediaEntry;
 import com.afollestad.impression.api.MediaFolderEntry;
@@ -23,9 +23,7 @@ public abstract class AccountHelper {
 
     public abstract Single<List<MediaEntry>> getEntries(Context context, final String albumPath, final boolean explorerMode, final @MediaAdapter.SortMode int sort, final @MediaAdapter.FileFilterMode int filter);
 
-    public abstract Drawable getHeader(Context context);
-
     public abstract boolean supportsExplorerMode();
 
-    public abstract Drawable getProfileImage(Context context);
+    public abstract Single<Uri[]> getProfileImageUris(Context context);
 }

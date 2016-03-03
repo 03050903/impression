@@ -658,12 +658,6 @@ public class MainActivity extends ThemedActivity
         }
     }
 
-    @Override
-    public void onFolderSelection(File folder) {
-        IncludedFolderProvider.add(this, folder);
-        reloadNavDrawerAlbums();
-    }
-
     public void reloadNavDrawerAlbums() {
         NavDrawerFragment nav = (NavDrawerFragment) getFragmentManager().findFragmentByTag(NAV_DRAWER_FRAGMENT);
         if (nav != null) {
@@ -784,6 +778,12 @@ public class MainActivity extends ThemedActivity
                 }
             });
         }
+    }
+
+    @Override
+    public void onFolderSelection(@NonNull FolderChooserDialog dialog, @NonNull File folder) {
+        IncludedFolderProvider.add(this, folder);
+        reloadNavDrawerAlbums();
     }
 
     public enum SelectAlbumMode {

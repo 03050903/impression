@@ -1,10 +1,8 @@
 package com.afollestad.impression.accounts;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.afollestad.impression.R;
@@ -53,8 +51,10 @@ public class LocalHelper extends AccountHelper {
     }
 
     @Override
-    public Drawable getProfileImage(Context context) {
-        return ContextCompat.getDrawable(context, R.drawable.temp_header);
+    public Single<Uri[]> getProfileImageUris(Context context) {
+        return Single.just(new Uri[]{
+                Utils.getDrawableResourceUri(context.getResources(), R.drawable.temp_header),
+                Utils.getDrawableResourceUri(context.getResources(), R.drawable.temp_header)});
     }
 
     @Override
@@ -242,12 +242,6 @@ public class LocalHelper extends AccountHelper {
                 }
             }).subscribeOn(Schedulers.io());
         }
-    }
-
-    @Override
-    public Drawable getHeader(Context context) {
-        //TODO: Change to real header
-        return ContextCompat.getDrawable(context, R.drawable.temp_header);
     }
 
     private Single<List<MediaEntry>> getExplorerModeEntries(Context context, final String albumPath, @MediaAdapter.SortMode int sort, @MediaAdapter.FileFilterMode int filter) {

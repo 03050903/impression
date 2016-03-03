@@ -1,11 +1,14 @@
 package com.afollestad.impression.utils;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
@@ -29,6 +32,13 @@ import java.util.Set;
  * @author Aidan Follestad (afollestad)
  */
 public abstract class Utils {
+
+    public static Uri getDrawableResourceUri(Resources resources, @DrawableRes int drawableRes) {
+        return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"
+                + resources.getResourcePackageName(drawableRes)
+                + '/' + resources.getResourceTypeName(drawableRes)
+                + '/' + resources.getResourceEntryName(drawableRes));
+    }
 
     public static Uri getImageContentUri(Context context, File imageFile) {
         if (context == null) {

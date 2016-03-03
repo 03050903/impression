@@ -1,7 +1,7 @@
 package com.afollestad.impression.accounts;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.support.annotation.IntDef;
 
 import com.afollestad.impression.api.MediaEntry;
@@ -86,12 +86,8 @@ public class Account {
         return mHelper.getEntries(context, albumPath, explorerMode, sort, filter);
     }
 
-    public Drawable getProfileImage(Context context) {
-        return mHelper.getProfileImage(context);
-    }
-
-    public Drawable getHeader(Context context) {
-        return mHelper.getHeader(context);
+    public Single<Uri[]> getProfileImageUris(final Context context) {
+        return mHelper.getProfileImageUris(context);
     }
 
     @Override

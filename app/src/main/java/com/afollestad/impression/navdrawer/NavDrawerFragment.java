@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -32,6 +33,12 @@ import com.afollestad.impression.utils.PrefUtils;
 import com.afollestad.impression.utils.Utils;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.plus.Plus;
 import com.pluscubed.picasaclient.PicasaClient;
 
 import java.util.List;
@@ -40,14 +47,20 @@ import java.util.Set;
 import rx.Single;
 import rx.SingleSubscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
 public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Callback {
 
+    private static final String SCOPE_PICASA = "https://picasaweb.google.com/data/";
+    private static final int RC_SIGN_IN = 300;
+
     private RecyclerView mRecyclerView;
 
     private NavDrawerAdapter mAdapter;
+
+    private GoogleApiClient mClient;
 
     public void notifyClosed() {
         mAdapter.setShowingAccounts(false);
@@ -80,7 +93,8 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
                     public void onSelection(MaterialDialog materialDialog, View view, int i, CharSequence s) {
                         if (i == 0) {
                             //Google Photos
-                            PicasaClient.get().pickAccount();
+                            connectGoogleApiClient(true);
+
                         } else {
                             // TODO - Other web accounts
                             Toast.makeText(getActivity(), "Not implemented", Toast.LENGTH_SHORT).show();
@@ -89,14 +103,53 @@ public class NavDrawerFragment extends Fragment implements NavDrawerAdapter.Call
                 }).build().show();
     }
 
+    private void connectGoogleApiClient(final boolean adding) {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestProfile()
+                .requestScopes(Plus.SCOPE_PLUS_PROFILE, new Scope(SCOPE_PICASA))
+                .build();
+
+        mClient = new GoogleApiClient.Builder(getActivity())
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(@Nullable Bundle bundle) {
+                        if (adding) {
+                            Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mClient);
+                            startActivityForResult(signInIntent, RC_SIGN_IN);
+                        }
+                    }
+
+                    @Override
+                    public void onConnectionSuspended(int i) {
+
+                    }
+                })
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .addApi(Plus.API)
+                .build();
+
+        mClient.connect(GoogleApiClient.SIGN_IN_MODE_OPTIONAL);
+    }
+
+    private void handleSignInResult(GoogleSignInResult googleSignInResult) {
+        if (googleSignInResult.isSuccess()) {
+
+        }
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if (requestCode == RC_SIGN_IN) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            connectGoogleApiClient(true);
+        }
+
         PicasaClient.get().onActivityResult(requestCode, resultCode, data)
-                .subscribe(new Action1<Object>() {
+                .subscribe(new Action0() {
                     @Override
-                    public void call(Object o) {
+                    public void call() {
                         android.accounts.Account picasaAccount = PicasaClient.get().getAccount();
                         Account account = PicasaHelper.newInstance(getActivity(), picasaAccount.name);
 

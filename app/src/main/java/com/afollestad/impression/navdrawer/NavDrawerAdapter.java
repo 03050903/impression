@@ -1,9 +1,11 @@
 package com.afollestad.impression.navdrawer;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.widget.RecyclerView;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +20,7 @@ import com.afollestad.impression.api.LocalMediaFolderEntry;
 import com.afollestad.impression.base.ThemedActivity;
 import com.afollestad.impression.utils.PrefUtils;
 import com.afollestad.impression.utils.Utils;
+import com.bumptech.glide.Glide;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,8 +28,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import rx.Observable;
 import rx.SingleSubscriber;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.functions.Func2;
+import rx.schedulers.Schedulers;
 
 public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.ViewHolder> {
 
@@ -57,6 +65,7 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
     private long mCheckedId;
     private long mCurrentAccountId;
     private boolean mShowingAccounts;
+    private Subscription mSubscription;
 
 
     public NavDrawerAdapter(Context context, Callback callback) {
@@ -206,32 +215,7 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
     public void onBindViewHolder(final ViewHolder holder, int position) {
         switch (getItemViewType(position)) {
             case VIEW_TYPE_HEADER:
-                AccountDbUtil.getAllAccounts().observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new SingleSubscriber<List<Account>>() {
-                            @Override
-                            public void onSuccess(List<Account> value) {
-                                long currentAccountId = PrefUtils.getCurrentAccountId(mContext);
-                                boolean firstSet = false;
-                                for (Account account : value) {
-                                    int profileImageIndex;
-                                    if (account.getId() == currentAccountId) {
-                                        holder.headerImage.setImageDrawable(account.getHeader(mContext));
-                                        profileImageIndex = 0;
-                                    } else if (!firstSet) {
-                                        profileImageIndex = 1;
-                                        firstSet = true;
-                                    } else {
-                                        profileImageIndex = 2;
-                                    }
-                                    holder.profileImages[profileImageIndex].setImageDrawable(account.getProfileImage(mContext));
-                                }
-                            }
-
-                            @Override
-                            public void onError(Throwable error) {
-
-                            }
-                        });
+                loadHeader(holder);
                 break;
             case VIEW_TYPE_ACCOUNTS:
                 position = position - 1;
@@ -270,6 +254,67 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
                 }
                 break;
         }
+    }
+
+    private void loadHeader(final ViewHolder holder) {
+        if (mSubscription != null) {
+            mSubscription.unsubscribe();
+        }
+        mSubscription = AccountDbUtil.getAllAccounts().observeOn(AndroidSchedulers.mainThread())
+                .toObservable()
+                .flatMap(new Func1<List<Account>, Observable<Account>>() {
+                    @Override
+                    public Observable<Account> call(List<Account> accounts) {
+                        return Observable.from(accounts);
+                    }
+                })
+                .observeOn(Schedulers.io())
+                .flatMap(new Func1<Account, Observable<Pair<Account, Uri[]>>>() {
+                    @Override
+                    public Observable<Pair<Account, Uri[]>> call(Account account) {
+                        return Observable.zip(
+                                Observable.just(account),
+                                account.getProfileImageUris(mContext).toObservable(),
+                                new Func2<Account, Uri[], Pair<Account, Uri[]>>() {
+                                    @Override
+                                    public Pair<Account, Uri[]> call(Account account, Uri[] uris) {
+                                        return new Pair<>(account, uris);
+                                    }
+                                });
+                    }
+                })
+                .toList()
+                .toSingle()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleSubscriber<List<Pair<Account, Uri[]>>>() {
+                    @Override
+                    public void onSuccess(List<Pair<Account, Uri[]>> value) {
+                        long currentAccountId = PrefUtils.getCurrentAccountId(mContext);
+                        boolean firstSet = false;
+                        for (Pair<Account, Uri[]> accountAndUris : value) {
+                            int profileImageIndex;
+                            if (accountAndUris.first.getId() == currentAccountId) {
+                                Glide.with(mContext)
+                                        .load(accountAndUris.second[1])
+                                        .into(holder.coverImage);
+                                profileImageIndex = 0;
+                            } else if (!firstSet) {
+                                profileImageIndex = 1;
+                                firstSet = true;
+                            } else {
+                                profileImageIndex = 2;
+                            }
+                            Glide.with(mContext)
+                                    .load(accountAndUris.second[0])
+                                    .into(holder.profileImages[profileImageIndex]);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                        error.printStackTrace();
+                    }
+                });
     }
 
     @Override
@@ -371,7 +416,7 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
 
         final View viewFrame;
 
-        final ImageView headerImage;
+        final ImageView coverImage;
         final TextView headerSubtitle;
         final ImageView[] profileImages;
         final ImageButton dropdownButton;
@@ -385,7 +430,7 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
             viewFrame = v.findViewById(R.id.viewFrame);
 
             if (viewType == VIEW_TYPE_HEADER) {
-                headerImage = (ImageView) v.findViewById(R.id.accountHeaderImage);
+                coverImage = (ImageView) v.findViewById(R.id.accountCoverImage);
                 divider = null;
                 icon = null;
                 headerSubtitle = (TextView) v.findViewById(R.id.subtitle);
@@ -395,7 +440,7 @@ public class NavDrawerAdapter extends RecyclerView.Adapter<NavDrawerAdapter.View
                 profileImages[1] = (ImageView) v.findViewById(R.id.profile_2);
                 profileImages[2] = (ImageView) v.findViewById(R.id.profile_3);
             } else {
-                headerImage = null;
+                coverImage = null;
                 divider = ((ViewGroup) v).getChildAt(0);
                 icon = (ImageView) v.findViewById(R.id.icon);
                 headerSubtitle = null;
